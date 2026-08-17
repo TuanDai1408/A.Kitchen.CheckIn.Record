@@ -202,9 +202,9 @@ var CHARTS = {};        // giữ instance chart để hủy khi vẽ lại
 var reportLoaded = false;
 
 // Bảng màu theo brand
-var RED='#F5811F', RED_L='#f9a04e', GOLD='#2E7D32', GREEN='#1d6f42';
-var PALETTE = ['#F5811F','#2E7D32','#1d6f42','#f9a04e','#c56510','#e0a800',
-               '#2b8a5a','#d4883f','#a8842a','#5c9e7a','#b86d15','#d98c2b'];
+var RED='#00897b', RED_L='#26a69a', GOLD='#F5811F', GREEN='#2e7d32';
+var PALETTE = ['#00897b','#F5811F','#2e7d32','#26a69a','#00695c','#e0a800',
+               '#2b8a5a','#4db6ac','#a8842a','#5c9e7a','#004d40','#80cbc4'];
 
 function switchTab(tab) {
   CURRENT_TAB = tab;
