@@ -56,7 +56,6 @@ var timer = null;
 
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', function() {
-  loadLogo();
   loadData();
   loadReport();
   timer = setInterval(function(){
@@ -69,18 +68,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById(id).addEventListener('input', applyFilter);
   });
 });
-
-// Nạp logo nếu có cấu hình
-async function loadLogo() {
-  try {
-    const result = await callAPI('getLogoUrl');
-    if (result && result.logoUrl) {
-      document.getElementById('logoBox').innerHTML = '<img src="' + result.logoUrl + '">';
-    }
-  } catch (err) {
-    console.log('loadLogo error:', err);
-  }
-}
 
 async function loadData(manual) {
   if (manual) toast('Đang làm mới...');
@@ -215,9 +202,9 @@ var CHARTS = {};        // giữ instance chart để hủy khi vẽ lại
 var reportLoaded = false;
 
 // Bảng màu theo brand
-var RED='#B01116', RED_L='#e8474d', GOLD='#d4a537', GREEN='#1d6f42';
-var PALETTE = ['#B01116','#d4a537','#1d6f42','#e8474d','#7d0c10','#e0a800',
-               '#2b8a5a','#c65a5f','#a8842a','#5c9e7a','#8a1f24','#d98c2b'];
+var RED='#F5811F', RED_L='#f9a04e', GOLD='#2E7D32', GREEN='#1d6f42';
+var PALETTE = ['#F5811F','#2E7D32','#1d6f42','#f9a04e','#c56510','#e0a800',
+               '#2b8a5a','#d4883f','#a8842a','#5c9e7a','#b86d15','#d98c2b'];
 
 function switchTab(tab) {
   CURRENT_TAB = tab;
