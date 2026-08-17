@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A.Kitchen • Quản trị Check-in</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>  
+  <header>
+    <div class="logo-box" id="logoBox"><span class="logo-star">★</span></div>
+    <div class="brand">
+      <h1>A.Kitchen</h1>
+      <p>CHECK-IN DASHBOARD • SIBAFOOD</p>
+      <p class="site-name">ĐẠI HỌC HÙNG VƯƠNG</p>
+    </div>
+    <div class="header-right">
+      <div><span id="liveDot"></span>Cập nhật tự động</div>
+      <div id="lastUpdate" style="margin-top:4px;">—</div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <!-- Tabs điều hướng -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tabBtnReport" onclick="switchTab('report')">Báo cáo thống kê</button>
+      <button class="tab-btn" id="tabBtnData" onclick="switchTab('data')">Dữ liệu check-in</button>
+    </div>
+
+    <!-- ===================== PANEL DỮ LIỆU ===================== -->
+    <div class="tab-panel" id="panelData">
+    <!-- Thẻ thống kê -->
+    <div class="stats">
+      <div class="stat"><div class="num" id="stTotal">0</div><div class="lbl">Tổng lượt check-in</div></div>
+      <div class="stat"><div class="num" id="stToday">0</div><div class="lbl">Check-in hôm nay</div></div>
+      <div class="stat"><div class="num" id="stPeople">0</div><div class="lbl">Số giảng viên</div></div>
+      <div class="stat"><div class="num" id="stDept">0</div><div class="lbl">Số phòng ban</div></div>
+    </div>
+
+    <!-- Bộ lọc -->
+    <div class="toolbar">
+      <div class="field grow">
+        <label>Tìm kiếm</label>
+        <input id="fSearch" type="text" placeholder="Mã GV, họ tên...">
+      </div>
+      <div class="field">
+        <label>Phòng ban</label>
+        <select id="fDept"><option value="">Tất cả</option></select>
+      </div>
+      <div class="field">
+        <label>Từ ngày</label>
+        <input id="fFrom" type="date" placeholder="Chọn ngày">
+      </div>
+      <div class="field">
+        <label>Đến ngày</label>
+        <input id="fTo" type="date" placeholder="Chọn ngày">
+      </div>
+      <button class="btn btn-ghost" onclick="resetFilter()">Xóa lọc</button>
+      <button class="btn btn-primary" onclick="loadData(true)">↻ Làm mới</button>
+      <button class="btn btn-excel" id="btnExport" onclick="doExport()">⬇ Xuất Excel</button>
+    </div>
+
+    <!-- Bảng -->
+    <div class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:60px;">STT</th>
+              <th>Mã giảng viên</th>
+              <th>Họ và tên</th>
+              <th>Phòng ban</th>
+              <th>Thời gian</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="5" class="empty">Đang tải dữ liệu...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="foot">
+        <span id="footInfo">—</span>
+        <span>Tự động làm mới mỗi 15 giây</span>
+      </div>
+    </div>
+    </div><!-- /panelData -->
+
+    <!-- ===================== PANEL BÁO CÁO ===================== -->
+    <div class="tab-panel active" id="panelReport">
+      <!-- Thẻ tổng quan -->
+      <div class="stats stats-6">
+        <div class="stat"><div class="num" id="rTotal">0</div><div class="lbl">Tổng lượt check-in</div></div>
+        <div class="stat"><div class="num" id="rAvg">0</div><div class="lbl">TB lượt / ngày</div></div>
+        <div class="stat"><div class="num" id="rQty">0</div><div class="lbl">Tổng suất ăn xuất bán</div></div>
+        <div class="stat"><div class="num" id="rProd">0</div><div class="lbl">Số loại món</div></div>
+        <div class="stat" id="statMismatch"><div class="num" id="rMismatch">0</div><div class="lbl">Ngày lệch số liệu</div></div>
+        <div class="stat" id="statGap"><div class="num" id="rGap">0</div><div class="lbl">Tổng chênh lệch (suất)</div></div>
+      </div>
+
+      <!-- HÀNG 1: Chart so sánh trọng tâm (full width) -->
+      <div class="chart-grid">
+        <div class="chart-card wide tall highlight-card">
+          <h3>⚖️ Check-in vs Suất ăn bán ra theo ngày</h3>
+          <div class="sub">So sánh số giảng viên check-in với số suất ăn thực bán. Ngày lệch được tô cột màu cảnh báo.</div>
+          <div class="canvas-wrap"><canvas id="chCompare"></canvas></div>
+        </div>
+      </div>
+
+      <!-- HÀNG 2: 2 line/area xu hướng cân đối -->
+      <div class="chart-grid cols-2">
+        <div class="chart-card">
+          <h3>📈 Xu hướng check-in theo ngày</h3>
+          <div class="sub">Số lượt check-in mỗi ngày</div>
+          <div class="canvas-wrap"><canvas id="chDate"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Suất ăn xuất bán theo ngày</h3>
+          <div class="sub">Tổng số lượng món xuất bán mỗi ngày</div>
+          <div class="canvas-wrap"><canvas id="chProdDate"></canvas></div>
+        </div>
+      </div>
+
+      <!-- HÀNG 3: phòng ban + top giảng viên -->
+      <div class="chart-grid cols-2">
+        <div class="chart-card">
+          <h3>🏢 Check-in theo phòng ban</h3>
+          <div class="sub">Xếp hạng lượt check-in theo phòng ban</div>
+          <div class="canvas-wrap"><canvas id="chDept"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>🏆 Top giảng viên check-in nhiều nhất</h3>
+          <div class="sub">10 giảng viên có số lượt cao nhất</div>
+          <div class="canvas-wrap"><canvas id="chTop"></canvas></div>
+        </div>
+      </div>
+
+      <!-- HÀNG 4: giờ + thứ + món ăn (3 cột) -->
+      <div class="chart-grid cols-3">
+        <div class="chart-card">
+          <h3>🕐 Phân bố theo khung giờ</h3>
+          <div class="sub">Giờ cao điểm trong ngày</div>
+          <div class="canvas-wrap"><canvas id="chHour"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>📅 Check-in theo thứ trong tuần</h3>
+          <div class="sub">Ngày đông khách nhất</div>
+          <div class="canvas-wrap"><canvas id="chWeekday"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>🍚 Top món ăn xuất bán</h3>
+          <div class="sub">Theo tổng số lượng bán ra</div>
+          <div class="canvas-wrap"><canvas id="chProduct"></canvas></div>
+        </div>
+      </div>
+    </div><!-- /panelReport -->
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div id="dlBox" style="display:none;background:#fff;border:1px solid var(--line);
+      border-radius:12px;padding:14px 18px;margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,.05);
+      align-items:center;gap:14px;">
+    <span style="font-size:22px;">✅</span>
+    <div style="flex:1;">
+      <div style="font-weight:600;">File Excel đã sẵn sàng</div>
+      <div id="dlName" style="font-size:13px;color:var(--muted);"></div>
+    </div>
+    <a id="dlLink" href="#" target="_blank" rel="noopener"
+        class="btn btn-excel" style="text-decoration:none;">⬇ Bấm để tải về</a>
+  </div>
+  <div class="modal-overlay" id="dlModal">
+    <div class="modal-card">
+      <div class="modal-icon">✅</div>
+      <h3>Tạo file thành công</h3>
+      <p class="modal-file" id="modalFileName">—</p>
+      <p class="modal-hint">File Excel đã sẵn sàng để tải về.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Đóng</button>
+        <a id="modalDlLink" href="#" target="_blank" rel="noopener"
+           class="btn btn-excel" style="text-decoration:none;" onclick="closeModal()">⬇ Tải về ngay</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
